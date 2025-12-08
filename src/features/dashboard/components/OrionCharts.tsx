@@ -95,9 +95,9 @@ export function OrionCharts() {
                 type="monotone"
                 dataKey="jpl"
                 name="Jam"
-                stroke="#5E6AD2"
+                stroke="#2563EB"
                 strokeWidth={2}
-                dot={{ r: 4, fill: "#5E6AD2", strokeWidth: 2, stroke: "#fff" }}
+                dot={{ r: 4, fill: "#2563EB", strokeWidth: 2, stroke: "#fff" }}
                 activeDot={{ r: 6, strokeWidth: 0 }}
               />
             </LineChart>
@@ -131,7 +131,7 @@ export function OrionCharts() {
                 contentStyle={{ backgroundColor: '#fff', borderRadius: '8px', border: '1px solid #E5E7EB', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)' }}
               />
               <Legend wrapperStyle={{ paddingTop: '20px' }} />
-              <Bar dataKey="jpl" name="Jam" fill="#5E6AD2" radius={[4, 4, 0, 0]} barSize={40} />
+              <Bar dataKey="jpl" name="Jam" fill="#2563EB" radius={[4, 4, 0, 0]} barSize={40} />
             </BarChart>
           </ResponsiveContainer>
         </CardContent>

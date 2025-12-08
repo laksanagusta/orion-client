@@ -3,6 +3,7 @@ import type { AuthState, User } from '../types/auth';
 
 interface AuthStore extends AuthState {
   setLoading: (isLoading: boolean) => void;
+  setUser: (user: User) => void;
 }
 
 export const useAuthStore = create<AuthStore>((set) => ({
@@ -22,4 +23,5 @@ export const useAuthStore = create<AuthStore>((set) => ({
   },
 
   setLoading: (isLoading: boolean) => set({ isLoading }),
+  setUser: (user: User) => set({ user }),
 }));

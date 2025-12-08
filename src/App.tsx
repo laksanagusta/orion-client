@@ -5,6 +5,8 @@ import LoginPage from "@/features/auth/LoginPage";
 import DashboardPage from "@/features/dashboard/DashboardPage";
 import CertificateInputPage from "@/features/certificates/CertificateInputPage";
 import CertificateListPage from "@/features/certificates/CertificateListPage";
+import ProfilePage from "@/features/profile/ProfilePage";
+import MonitoringPage from "@/features/monitoring/MonitoringPage";
 
 function App() {
   return (
@@ -21,9 +23,9 @@ function App() {
           <Route path="/dashboard" element={<DashboardPage />} />
           <Route path="/certificates/input" element={<CertificateInputPage />} />
           <Route path="/certificates/list" element={<CertificateListPage />} />
-          <Route path="/monitoring" element={<div>Monitoring Page</div>} />
+          <Route path="/monitoring" element={<MonitoringPage />} />
           <Route path="/notifications" element={<div>Notifications Page</div>} />
-          <Route path="/profile" element={<div>Profile Page</div>} />
+          <Route path="/profile" element={<ProfilePage />} />
         </Route>
       </Routes>
     </BrowserRouter>

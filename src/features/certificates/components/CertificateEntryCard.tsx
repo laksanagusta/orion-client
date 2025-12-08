@@ -123,7 +123,7 @@ export function CertificateEntryCard({
         <div className="flex items-center gap-3">
           <div className={cn(
             "w-10 h-10 rounded-lg flex items-center justify-center",
-            entry.file ? "bg-blue-50 text-blue-600" : "bg-orange-50 text-orange-600"
+            entry.file ? "bg-primary/10 text-primary" : "bg-orange-50 text-orange-600"
           )}>
             <FileText className="w-5 h-5" />
           </div>
@@ -138,8 +138,14 @@ export function CertificateEntryCard({
                   {entry.status === 'uploading' ? 'Uploading...' : 'Extracting info...'}
                 </span>
               )}
+              {entry.status === 'idle' && (
+                <span className="flex items-center gap-1 text-amber-600">
+                  <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
+                  Menunggu proses
+                </span>
+              )}
               {entry.status === 'ready' && (
-                <span className="flex items-center gap-1 text-blue-600">
+                <span className="flex items-center gap-1 text-primary">
                   <AlertCircle className="w-3 h-3" />
                   Review required
                 </span>

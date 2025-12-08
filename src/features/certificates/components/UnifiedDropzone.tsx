@@ -24,8 +24,8 @@ export function UnifiedDropzone({ onDrop, isSubmitting = false }: UnifiedDropzon
       className={cn(
         "border-2 border-dashed rounded-lg p-10 text-center cursor-pointer transition-all duration-200 ease-in-out",
         isDragActive
-          ? "border-purple-500 bg-purple-50/50"
-          : "border-border hover:border-purple-500/50 hover:bg-secondary/50",
+          ? "border-primary bg-primary/5"
+          : "border-border hover:border-primary/50 hover:bg-secondary/50",
         isSubmitting && "opacity-50 cursor-not-allowed"
       )}
     >
@@ -33,7 +33,7 @@ export function UnifiedDropzone({ onDrop, isSubmitting = false }: UnifiedDropzon
       <div className="flex flex-col items-center gap-4">
         <div className={cn(
           "w-16 h-16 rounded-full flex items-center justify-center transition-colors",
-          isDragActive ? "bg-gradient-to-br from-indigo-500/20 via-purple-500/20 to-pink-500/20 text-purple-600" : "bg-secondary text-muted-foreground"
+          isDragActive ? "bg-primary/10 text-primary" : "bg-secondary text-muted-foreground"
         )}>
           <UploadCloud className="w-8 h-8" />
         </div>
@@ -43,7 +43,7 @@ export function UnifiedDropzone({ onDrop, isSubmitting = false }: UnifiedDropzon
           </h3>
           <p className="text-sm text-muted-foreground max-w-sm mx-auto">
             Tarik dan lepas file PDF atau Gambar Anda di sini, atau klik untuk menelusuri.
-            Kami akan mengekstrak detailnya secara otomatis untuk Anda.
+            Maksimal 1 file 1MB. Kami akan mengekstrak detailnya secara otomatis.
           </p>
         </div>
         <div className="flex items-center gap-2 text-xs text-muted-foreground">

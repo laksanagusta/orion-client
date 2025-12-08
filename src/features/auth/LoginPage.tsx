@@ -48,14 +48,16 @@ export default function LoginPage() {
     <div className="min-h-screen flex items-center justify-center bg-white p-4">
       <div className="w-full max-w-[400px] space-y-8">
         <div className="text-center space-y-2">
-          <div className="w-12 h-12 bg-primary rounded-xl flex items-center justify-center mx-auto mb-6 shadow-lg shadow-primary/20">
-            <span className="text-primary-foreground font-bold text-2xl">J</span>
+          <div className="w-14 h-14 bg-primary rounded-xl flex items-center justify-center mx-auto mb-6 shadow-lg shadow-primary/20">
+            <svg className="w-8 h-8 text-primary-foreground" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" />
+            </svg>
           </div>
-          <h1 className="text-2xl font-semibold tracking-tight text-foreground">
-            Welcome back
+          <h1 className="text-2xl font-bold tracking-tight text-foreground">
+            Selamat Datang di Orion
           </h1>
           <p className="text-sm text-muted-foreground">
-            Enter your credentials to access the JPL Tracker
+            Masukkan kredensial untuk mengakses sistem
           </p>
         </div>
 

@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect } from "react";
-import { Plus, Loader2 } from "lucide-react";
+import { Plus, Loader2, AlertTriangle, Info } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
@@ -95,44 +95,68 @@ export default function CertificateInputPage() {
     loadTypes();
   }, [toast]);
 
-  const handleDrop = useCallback(async (files: File[]) => {
-    // Create entries with uploading status
+  const handleDrop = useCallback((rawFiles: File[]) => {
+    // Filter files larger than 1MB
+    const MAX_SIZE = 1024 * 1024; // 1MB
+    const files: File[] = [];
+    const invalidFiles: File[] = [];
+
+    rawFiles.forEach((file) => {
+      if (file.size <= MAX_SIZE) {
+        files.push(file);
+      } else {
+        invalidFiles.push(file);
+      }
+    });
+
+    if (invalidFiles.length > 0) {
+      toast({
+        title: "File Terlalu Besar",
+        description: `${invalidFiles.length} file melebihi batas 1MB dan tidak diproses.`,
+        variant: "destructive",
+      });
+    }
+
+    if (files.length === 0) return;
+
+    // Create entries with idle status
     const newEntries: CertificateEntry[] = files.map((file) => ({
       id: generateId(),
       file,
-      status: 'uploading',
+      status: 'idle',
       progress: 0,
     }));
 
     setEntries((prev) => [...newEntries, ...prev]);
+  }, [toast]);
 
-    // Upload files to API for AI extraction
+  const handleProcess = async () => {
+    const pendingEntries = entries.filter(e => e.status === 'idle' && e.file);
+    if (pendingEntries.length === 0) return;
+
+    const files = pendingEntries.map(e => e.file!);
+
+    // Update status to extracting
+    setEntries((prev) =>
+      prev.map((e) =>
+        pendingEntries.some((pe) => pe.id === e.id)
+          ? { ...e, status: 'extracting', progress: 50 }
+          : e
+      )
+    );
+
     try {
-      // Update status to extracting
-      setEntries((prev) =>
-        prev.map((e) =>
-          newEntries.some((ne) => ne.id === e.id)
-            ? { ...e, status: 'extracting', progress: 50 }
-            : e
-        )
-      );
-
       const response = await certificateService.extract(files);
 
-      // Log the full API response for debugging
       console.log("Full extract API response:", JSON.stringify(response, null, 2));
 
-      // Map extracted data back to entries - build update map first to avoid race conditions
+      // Map extracted data back to entries
       const extractedDataMap = new Map<string, { formData: CertificateFormValues; temp_id: string; file_url: string }>();
       
       response.data.results.forEach((extracted: ExtractedCertificate, index: number) => {
-        const entryId = newEntries[index]?.id;
+        const entryId = pendingEntries[index]?.id;
         if (!entryId) return;
-
-        // Log the raw extracted item for debugging
-        console.log("Raw extracted item:", JSON.stringify(extracted, null, 2));
         
-        // Extract the data - handle both snake_case and camelCase field names
         const extractedItem = extracted.extracted as Record<string, unknown>;
         
         const formData: CertificateFormValues = {
@@ -140,16 +164,12 @@ export default function CertificateInputPage() {
           institution: (extractedItem.institution || "") as string,
           certificate_number: (extractedItem.certificate_number || extractedItem.certificateNumber || "") as string,
           year: (extractedItem.year || new Date().getFullYear()) as number,
-          // Parse Indonesian date format to ISO format for HTML date inputs
           start_date: parseToISODate((extractedItem.start_date || extractedItem.startDate || "") as string),
           end_date: parseToISODate((extractedItem.end_date || extractedItem.endDate || "") as string),
           jpl_hours: (extractedItem.jpl_hours || extractedItem.jplHours || 0) as number,
           type: (extractedItem.type || "") as string,
           sub_type: (extractedItem.sub_type || extractedItem.subtype || extractedItem.subType || "") as string,
         };
-        
-        // Log extracted data for debugging
-        console.log("Mapped formData for entry", entryId, ":", formData);
 
         extractedDataMap.set(entryId, {
           formData,
@@ -158,7 +178,6 @@ export default function CertificateInputPage() {
         });
       });
 
-      // Batch update all entries at once to avoid race conditions
       setEntries((prev) =>
         prev.map((e) => {
           const extractedInfo = extractedDataMap.get(e.id);
@@ -182,10 +201,9 @@ export default function CertificateInputPage() {
       });
     } catch (error) {
       console.error("Extraction failed:", error);
-      // Mark all new entries as error
       setEntries((prev) =>
         prev.map((e) =>
-          newEntries.some((ne) => ne.id === e.id)
+          pendingEntries.some((pe) => pe.id === e.id)
             ? { ...e, status: 'error', error: "Failed to extract data from file" }
             : e
         )
@@ -196,7 +214,7 @@ export default function CertificateInputPage() {
         variant: "destructive",
       });
     }
-  }, [toast]);
+  };
 
   const handleAddManual = () => {
     const newEntry: CertificateEntry = {
@@ -406,7 +424,21 @@ export default function CertificateInputPage() {
         </div>
       </div>
 
+      <div className="bg-amber-50 border border-amber-200 rounded-md p-3 flex items-center gap-2 text-amber-800 text-sm">
+        <AlertTriangle className="w-4 h-4 shrink-0" />
+        <p>Ekstraksi otomatis menggunakan AI. Mohon cek kembali data sebelum disimpan.</p>
+      </div>
+
       <UnifiedDropzone onDrop={handleDrop} />
+
+      {entries.some(e => e.status === 'idle') && (
+        <div className="flex justify-center">
+          <Button onClick={handleProcess} className="w-full md:w-auto px-8 gap-2">
+            <Loader2 className="w-4 h-4 hidden" /> {/* Hidden loader to maintain height if needed, or use conditional */}
+            Proses Ekstraksi ({entries.filter(e => e.status === 'idle').length} File)
+          </Button>
+        </div>
+      )}
 
       <div className="space-y-4">
         {entries.length > 0 && (

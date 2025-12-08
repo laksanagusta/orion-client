@@ -1,4 +1,4 @@
-import { Menu, Search } from "lucide-react";
+import { Menu, Search, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -17,11 +17,11 @@ export function Header() {
   const { user, logout } = useAuthStore();
 
   return (
-    <header className="h-12 border-b border-border bg-card px-4 flex items-center justify-between flex-shrink-0">
+    <header className="h-12 border-b border-primary/20 bg-primary px-4 flex items-center justify-between flex-shrink-0">
       <div className="flex items-center gap-4">
         <Sheet>
           <SheetTrigger asChild>
-            <Button variant="ghost" size="icon" className="md:hidden">
+            <Button variant="ghost" size="icon" className="md:hidden text-primary-foreground hover:bg-primary-foreground/10">
               <Menu className="w-5 h-5" />
             </Button>
           </SheetTrigger>
@@ -29,10 +29,12 @@ export function Header() {
              {/* Mobile Sidebar Content - slightly modified version of Sidebar */}
              <div className="h-full flex flex-col">
                 <div className="p-6 flex items-center gap-2 border-b border-border">
-                    <div className="w-8 h-8 bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 rounded-lg flex items-center justify-center shadow-sm">
-                    <span className="text-white font-bold text-xl">J</span>
+                    <div className="w-9 h-9 bg-primary rounded-lg flex items-center justify-center shadow-sm">
+                      <svg className="w-5 h-5 text-primary-foreground" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" />
+                      </svg>
                     </div>
-                    <span className="font-bold text-xl text-foreground">JPL Tracker</span>
+                    <span className="font-bold text-xl text-foreground tracking-tight">Orion</span>
                 </div>
                 {/* Navigation links would go here, duplicating logic for now or refactoring Sidebar to be reusable */}
                 {/* For simplicity in this step, I'll just render a placeholder or import the nav items if I exported them */}
@@ -41,26 +43,27 @@ export function Header() {
         </Sheet>
         
         <div className="hidden md:flex items-center relative w-64">
-          <Search className="w-3.5 h-3.5 absolute left-2.5 text-muted-foreground" />
+          <Search className="w-3.5 h-3.5 absolute left-2.5 text-primary-foreground/60" />
           <Input 
-            placeholder="Search..." 
-            className="h-8 pl-8 bg-background/50 border-border focus-visible:ring-primary text-sm" 
+            placeholder="Cari..." 
+            className="h-8 pl-8 bg-primary-foreground/10 border-primary-foreground/20 text-primary-foreground placeholder:text-primary-foreground/50 focus-visible:ring-primary-foreground/30 text-sm" 
           />
         </div>
       </div>
 
       <div className="flex items-center gap-4">
         <div className="flex flex-col items-end hidden sm:flex">
-            <span className="text-sm font-medium text-foreground">{user?.first_name} {user?.last_name}</span>
-            <span className="text-xs text-muted-foreground">{user?.employee_id}</span>
+            <span className="text-sm font-medium text-primary-foreground">{user?.first_name} {user?.last_name}</span>
+            <span className="text-xs text-primary-foreground/70">{user?.employee_id}</span>
         </div>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="relative h-8 w-8 rounded-full">
-              <Avatar className="h-8 w-8 border border-border">
+            <Button variant="ghost" className="relative h-8 w-auto gap-2 flex items-center rounded-full pl-2 pr-1 hover:bg-primary-foreground/10">
+              <Avatar className="h-8 w-8 border-2 border-primary-foreground/30">
                 <AvatarImage src={user?.avatar_url} alt={user?.username} />
-                <AvatarFallback className="text-xs">{user?.first_name?.[0]}{user?.last_name?.[0]}</AvatarFallback>
+                <AvatarFallback className="text-xs bg-primary-foreground/20 text-primary-foreground">{user?.first_name?.[0]}{user?.last_name?.[0]}</AvatarFallback>
               </Avatar>
+              <ChevronDown className="w-4 h-4 text-primary-foreground/70" />
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent className="w-56" align="end" forceMount>

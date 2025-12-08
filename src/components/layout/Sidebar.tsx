@@ -25,10 +25,12 @@ export function Sidebar() {
   return (
     <div className="fixed inset-y-0 left-0 z-30 w-64 bg-card border-r border-border flex-col hidden md:flex">
       <div className="h-12 px-4 flex items-center gap-2 border-b border-border">
-        <div className="w-6 h-6 bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 rounded-md flex items-center justify-center shadow-sm">
-          <span className="text-white font-bold text-xs">J</span>
+        <div className="w-7 h-7 bg-primary rounded-lg flex items-center justify-center">
+          <svg className="w-4 h-4 text-primary-foreground" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" />
+          </svg>
         </div>
-        <span className="font-semibold text-sm text-foreground">JPL Tracker</span>
+        <span className="font-bold text-sm text-foreground tracking-tight">Orion</span>
       </div>
 
       <nav className="flex-1 px-3 py-2 space-y-0.5 overflow-y-auto">
@@ -40,7 +42,7 @@ export function Sidebar() {
               cn(
                 "flex items-center gap-3 px-3 py-1.5 rounded-md text-sm transition-all duration-200 group",
                 isActive
-                  ? "bg-gradient-to-r from-indigo-500/10 via-purple-500/10 to-pink-500/10 text-purple-700 font-medium border border-purple-100"
+                  ? "bg-primary/10 text-primary font-medium border border-primary/20"
                   : "text-muted-foreground hover:bg-secondary/50 hover:text-foreground"
               )
             }
