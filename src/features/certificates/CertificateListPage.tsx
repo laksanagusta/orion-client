@@ -7,18 +7,17 @@ import {
   MoreHorizontal, 
   Edit2, 
   Trash2, 
-  CheckCircle, 
-  XCircle,
   Loader2,
   ChevronLeft,
   ChevronRight,
   Filter,
-  Eye
+  Eye,
+  Download
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+// import { Badge } from "@/components/ui/badge";
 import {
   Select,
   SelectContent,
@@ -44,6 +43,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { useToast } from "@/components/ui/use-toast";
+import { DocumentPreviewModal } from "@/components/DocumentPreviewModal";
 import { certificateService } from "@/services/certificateService";
 import type { Certificate, CertificateListParams, CertificateTypeItem } from "@/types/certificate";
 
@@ -66,6 +66,10 @@ export default function CertificateListPage() {
     certificate: null,
   });
   const [isDeleting, setIsDeleting] = useState(false);
+  const [previewModal, setPreviewModal] = useState<{ open: boolean; certificate: Certificate | null }>({
+    open: false,
+    certificate: null,
+  });
   const { toast } = useToast();
 
   // Load certificate types
@@ -121,6 +125,7 @@ export default function CertificateListPage() {
       toast({
         title: "Certificate Deleted",
         description: `"${deleteDialog.certificate.training_name}" has been deleted.`,
+        variant: "success",
       });
       setDeleteDialog({ open: false, certificate: null });
       fetchCertificates();
@@ -136,26 +141,7 @@ export default function CertificateListPage() {
     }
   };
 
-  const handleVerify = async (cert: Certificate, isVerified: boolean) => {
-    try {
-      await certificateService.verify(cert.id, {
-        is_verified: isVerified,
-        verification_notes: isVerified ? "Verified" : "Rejected",
-      });
-      toast({
-        title: isVerified ? "Certificate Verified" : "Certificate Rejected",
-        description: `"${cert.training_name}" has been ${isVerified ? 'verified' : 'rejected'}.`,
-      });
-      fetchCertificates();
-    } catch (error) {
-      console.error("Failed to verify certificate:", error);
-      toast({
-        title: "Action Failed",
-        description: "Failed to update certificate status. Please try again.",
-        variant: "destructive",
-      });
-    }
-  };
+
 
   const formatDate = (dateStr: string) => {
     try {
@@ -173,15 +159,15 @@ export default function CertificateListPage() {
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Certificates</h1>
+          <h1 className="text-3xl font-bold tracking-tight">Riwayat Pelatihan</h1>
           <p className="text-muted-foreground mt-1">
-            Manage and view all your training certificates.
+            Kelola dan lihat semua riwayat pelatihan Anda.
           </p>
         </div>
         <Button asChild className="gap-2">
           <Link to="/certificates/input">
             <Plus className="w-4 h-4" />
-            Add Certificate
+            Tambah Pelatihan
           </Link>
         </Button>
       </div>
@@ -274,12 +260,12 @@ export default function CertificateListPage() {
           ) : certificates.length === 0 ? (
             <div className="text-center py-12 text-muted-foreground">
               <FileText className="w-12 h-12 mx-auto mb-4 opacity-50" />
-              <p className="text-lg font-medium">No certificates found</p>
-              <p className="text-sm mt-1">Try adjusting your filters or add a new certificate.</p>
+              <p className="text-lg font-medium">Belum ada riwayat pelatihan</p>
+              <p className="text-sm mt-1">Coba sesuaikan filter atau tambahkan pelatihan baru.</p>
               <Button asChild className="mt-4">
                 <Link to="/certificates/input">
                   <Plus className="w-4 h-4 mr-2" />
-                  Add Certificate
+                  Tambah Pelatihan
                 </Link>
               </Button>
             </div>
@@ -290,12 +276,11 @@ export default function CertificateListPage() {
                 <table className="w-full">
                   <thead>
                     <tr className="border-b">
-                      <th className="text-left py-3 px-4 font-medium text-muted-foreground">Training Name</th>
-                      <th className="text-left py-3 px-4 font-medium text-muted-foreground">Type</th>
-                      <th className="text-left py-3 px-4 font-medium text-muted-foreground">Institution</th>
+                      <th className="text-left py-3 px-4 font-medium text-muted-foreground">Nama Pelatihan</th>
+                      <th className="text-left py-3 px-4 font-medium text-muted-foreground">Tipe</th>
+                      <th className="text-left py-3 px-4 font-medium text-muted-foreground">Institusi</th>
                       <th className="text-center py-3 px-4 font-medium text-muted-foreground">JPL</th>
-                      <th className="text-center py-3 px-4 font-medium text-muted-foreground">Status</th>
-                      <th className="text-left py-3 px-4 font-medium text-muted-foreground">Date</th>
+                      <th className="text-left py-3 px-4 font-medium text-muted-foreground">Tanggal</th>
                       <th className="text-right py-3 px-4 font-medium text-muted-foreground">Actions</th>
                     </tr>
                   </thead>
@@ -328,13 +313,6 @@ export default function CertificateListPage() {
                         <td className="py-4 px-4 text-center">
                           <span className="font-semibold">{cert.jpl_hours}h</span>
                         </td>
-                        <td className="py-4 px-4 text-center">
-                          {cert.is_verified ? (
-                            <Badge variant="success">Verified</Badge>
-                          ) : (
-                            <Badge variant="warning">Pending</Badge>
-                          )}
-                        </td>
                         <td className="py-4 px-4 text-sm text-muted-foreground">
                           {formatDate(cert.start_date)}
                         </td>
@@ -351,25 +329,16 @@ export default function CertificateListPage() {
                                   <Eye className="mr-2 h-4 w-4" /> Lihat Detail
                                 </Link>
                               </DropdownMenuItem>
-                              {cert.file_url && (
-                                <DropdownMenuItem onClick={() => window.open(cert.file_url, '_blank')}>
-                                  <FileText className="mr-2 h-4 w-4" /> View Document
-                                </DropdownMenuItem>
-                              )}
+                              <DropdownMenuItem onClick={() => setPreviewModal({ open: true, certificate: cert })}>
+                                <FileText className="mr-2 h-4 w-4" /> Lihat Dokumen
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => certificateService.download(cert.id, cert.file_name)}>
+                                <Download className="mr-2 h-4 w-4" /> Unduh
+                              </DropdownMenuItem>
                               <DropdownMenuItem>
                                 <Edit2 className="mr-2 h-4 w-4" /> Edit
                               </DropdownMenuItem>
-                              {!cert.is_verified && (
-                                <>
-                                  <DropdownMenuSeparator />
-                                  <DropdownMenuItem onClick={() => handleVerify(cert, true)}>
-                                    <CheckCircle className="mr-2 h-4 w-4 text-green-600" /> Verify
-                                  </DropdownMenuItem>
-                                  <DropdownMenuItem onClick={() => handleVerify(cert, false)}>
-                                    <XCircle className="mr-2 h-4 w-4 text-red-600" /> Reject
-                                  </DropdownMenuItem>
-                                </>
-                              )}
+
                               <DropdownMenuSeparator />
                               <DropdownMenuItem 
                                 className="text-destructive"
@@ -442,6 +411,14 @@ export default function CertificateListPage() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Document Preview Modal */}
+      <DocumentPreviewModal
+        isOpen={previewModal.open}
+        onClose={() => setPreviewModal({ open: false, certificate: null })}
+        certificateId={previewModal.certificate?.id || ""}
+        fileName={previewModal.certificate?.file_name}
+      />
     </div>
   );
 }

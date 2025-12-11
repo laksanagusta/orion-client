@@ -1,3 +1,8 @@
+export interface Permission {
+  resource: string;
+  action: string;
+}
+
 export interface User {
   id: string;
   employee_id: string;
@@ -10,6 +15,7 @@ export interface User {
   organization_id?: string;
   organization?: { id: string; name: string }; // For populated organization
   avatar_url?: string;
+  permissions?: Permission[];
 }
 
 export interface LoginRequest {

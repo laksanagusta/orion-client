@@ -6,11 +6,8 @@ import {
   Loader2,
   AlertTriangle,
   Download,
-  ExternalLink,
-  CheckCircle,
-  XCircle,
-  Image as ImageIcon,
   Edit2,
+  Eye,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -19,8 +16,8 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/components/ui/use-toast";
+import { DocumentPreviewModal } from "@/components/DocumentPreviewModal";
 import { certificateService } from "@/services/certificateService";
-import { getApiUrl } from "@/lib/config";
 import type { Certificate } from "@/types/certificate";
 
 export default function CertificateDetailPage() {
@@ -30,6 +27,8 @@ export default function CertificateDetailPage() {
 
   const [certificate, setCertificate] = useState<Certificate | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isDownloading, setIsDownloading] = useState(false);
+  const [isPreviewOpen, setIsPreviewOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -60,26 +59,30 @@ export default function CertificateDetailPage() {
     fetchCertificate();
   }, [id, toast]);
 
-  const getFileUrl = (filePath: string) => {
-    const apiUrl = getApiUrl();
-    return `${apiUrl}/api/v1/files/${filePath}`;
-  };
-
   const handleViewDocument = () => {
-    if (certificate?.file_path) {
-      window.open(getFileUrl(certificate.file_path), "_blank");
-    }
+    setIsPreviewOpen(true);
   };
 
-  const handleDownload = () => {
-    if (certificate?.file_path) {
-      const link = document.createElement("a");
-      link.href = getFileUrl(certificate.file_path);
-      link.download = certificate.file_name;
-      link.target = "_blank";
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
+  const handleDownload = async () => {
+    if (certificate && id) {
+      try {
+        setIsDownloading(true);
+        await certificateService.download(id, certificate.file_name);
+        toast({
+          title: "Download Berhasil",
+          description: `${certificate.file_name} telah diunduh.`,
+          variant: "success",
+        });
+      } catch (err) {
+        console.error("Download failed:", err);
+        toast({
+          title: "Download Gagal",
+          description: "Gagal mengunduh dokumen. Silakan coba lagi.",
+          variant: "destructive",
+        });
+      } finally {
+        setIsDownloading(false);
+      }
     }
   };
 
@@ -139,12 +142,12 @@ export default function CertificateDetailPage() {
         </div>
         <div className="flex items-center gap-2">
           <Button variant="outline" onClick={handleViewDocument} className="gap-2">
-            <ExternalLink className="w-4 h-4" />
+            <Eye className="w-4 h-4" />
             <span className="hidden sm:inline">Lihat Dokumen</span>
           </Button>
-          <Button onClick={handleDownload} className="gap-2">
-            <Download className="w-4 h-4" />
-            <span className="hidden sm:inline">Unduh</span>
+          <Button onClick={handleDownload} className="gap-2" disabled={isDownloading}>
+            {isDownloading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
+            <span className="hidden sm:inline">{isDownloading ? "Mengunduh..." : "Unduh"}</span>
           </Button>
         </div>
       </div>
@@ -156,9 +159,12 @@ export default function CertificateDetailPage() {
             <div className="w-10 h-10 rounded-lg flex items-center justify-center overflow-hidden bg-primary/10 text-primary">
               {isImage ? (
                 <img
-                  src={getFileUrl(certificate.file_path)}
+                  src={certificateService.getPreviewUrl(id!)}
                   alt="Preview"
                   className="w-full h-full object-cover"
+                  onError={(e) => {
+                    (e.target as HTMLImageElement).style.display = 'none';
+                  }}
                 />
               ) : (
                 <FileText className="w-5 h-5" />
@@ -168,22 +174,12 @@ export default function CertificateDetailPage() {
               <CardTitle className="text-base font-medium truncate max-w-[300px]">
                 {certificate.training_name}
               </CardTitle>
-              <div className="flex items-center gap-2 text-xs">
-                {certificate.is_verified ? (
-                  <span className="flex items-center gap-1 text-green-600">
-                    <CheckCircle className="w-3 h-3" />
-                    Terverifikasi
-                  </span>
-                ) : (
-                  <span className="flex items-center gap-1 text-amber-600">
-                    <XCircle className="w-3 h-3" />
-                    Menunggu Verifikasi
-                  </span>
-                )}
+              <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                {certificate.type} • {certificate.sub_type}
               </div>
             </div>
           </div>
-          <Badge variant={certificate.is_verified ? "success" : "warning"}>
+          <Badge className="text-sm px-3 py-1 bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-100 dark:bg-blue-900/30 dark:text-blue-300 dark:border-blue-800">
             {certificate.jpl_hours} JPL
           </Badge>
         </CardHeader>
@@ -197,9 +193,12 @@ export default function CertificateDetailPage() {
                 {isImage ? (
                   <div className="w-10 h-10 rounded-md overflow-hidden bg-background border flex-shrink-0">
                     <img
-                      src={getFileUrl(certificate.file_path)}
+                      src={certificateService.getPreviewUrl(id!)}
                       alt="Preview"
                       className="w-full h-full object-cover"
+                      onError={(e) => {
+                        (e.target as HTMLImageElement).style.display = 'none';
+                      }}
                     />
                   </div>
                 ) : (
@@ -225,7 +224,7 @@ export default function CertificateDetailPage() {
                   onClick={handleViewDocument}
                   title="Lihat Dokumen"
                 >
-                  {isImage ? <ImageIcon className="w-4 h-4" /> : <FileText className="w-4 h-4" />}
+                  {isImage ? <FileText className="w-4 h-4" /> : <FileText className="w-4 h-4" />}
                 </Button>
               </div>
             </div>
@@ -279,13 +278,7 @@ export default function CertificateDetailPage() {
             </div>
           </div>
 
-          {/* Verification Notes */}
-          {certificate.verification_notes && (
-            <div className="space-y-2">
-              <Label>Catatan Verifikasi</Label>
-              <Input value={certificate.verification_notes} disabled readOnly />
-            </div>
-          )}
+
 
           {/* Metadata */}
           <div className="pt-4 border-t border-border">
@@ -328,6 +321,14 @@ export default function CertificateDetailPage() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Document Preview Modal */}
+      <DocumentPreviewModal
+        isOpen={isPreviewOpen}
+        onClose={() => setIsPreviewOpen(false)}
+        certificateId={id || ""}
+        fileName={certificate.file_name}
+      />
     </div>
   );
 }

@@ -1,6 +1,7 @@
-import { Menu, Search, ChevronDown } from "lucide-react";
+import { Menu, ChevronDown } from "lucide-react";
+import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   DropdownMenu,
@@ -19,7 +20,7 @@ export function Header() {
   const { user, logout } = useAuthStore();
 
   return (
-    <header className="sticky top-0 z-40 h-14 border-b border-primary/20 bg-primary px-4 flex items-center justify-between flex-shrink-0">
+    <header className="fixed top-0 right-0 left-0 md:left-64 z-40 h-14 border-b border-primary/20 bg-primary px-4 flex items-center justify-between flex-shrink-0">
       <div className="flex items-center gap-4">
         <Sheet>
           <SheetTrigger asChild>
@@ -31,7 +32,9 @@ export function Header() {
              {/* Mobile Sidebar Content - slightly modified version of Sidebar */}
              <div className="h-full flex flex-col">
                 <div className="p-6 flex items-center border-b border-border">
-                  <Logo size="lg" />
+                  <Link to="/dashboard">
+                    <Logo size="lg" />
+                  </Link>
                 </div>
                 {/* Navigation links would go here, duplicating logic for now or refactoring Sidebar to be reusable */}
                 {/* For simplicity in this step, I'll just render a placeholder or import the nav items if I exported them */}
@@ -39,13 +42,7 @@ export function Header() {
           </SheetContent>
         </Sheet>
         
-        <div className="hidden md:flex items-center relative w-64">
-          <Search className="w-3.5 h-3.5 absolute left-2.5 text-primary-foreground/60" />
-          <Input 
-            placeholder="Cari..." 
-            className="h-8 pl-8 bg-primary-foreground/10 border-primary-foreground/20 text-primary-foreground placeholder:text-primary-foreground/50 focus-visible:ring-primary-foreground/30 text-sm" 
-          />
-        </div>
+
       </div>
 
       <div className="flex items-center gap-4">

@@ -426,7 +426,9 @@ export default function CertificateInputPage() {
 
       <div className="bg-amber-50 border border-amber-200 rounded-md p-3 flex items-center gap-2 text-amber-800 text-sm">
         <AlertTriangle className="w-4 h-4 shrink-0" />
-        <p>Ekstraksi otomatis menggunakan AI. Mohon cek kembali data sebelum disimpan.</p>
+        <p>
+          <strong>Disclaimer:</strong> Ekstraksi data dilakukan menggunakan AI. Mohon periksa kembali kelengkapan dan kebenaran data sebelum menyimpan.
+        </p>
       </div>
 
       <UnifiedDropzone onDrop={handleDrop} />

@@ -1,6 +1,12 @@
 import { useEffect, useState } from "react";
-import { Loader2, RefreshCw } from "lucide-react";
+import { Loader2, RefreshCw, FileSpreadsheet, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { useToast } from "@/components/ui/use-toast";
 
 import { reportService } from "@/services/reportService";
@@ -13,7 +19,12 @@ import { EmployeeLists } from "./components/EmployeeLists";
 export default function MonitoringPage() {
   const [data, setData] = useState<ManagerReportData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isExporting, setIsExporting] = useState(false);
   const { toast } = useToast();
+
+  // Generate year options (current year and 5 years back)
+  const currentYear = new Date().getFullYear();
+  const yearOptions = Array.from({ length: 6 }, (_, i) => currentYear - i);
 
   const loadData = async () => {
     setIsLoading(true);
@@ -31,6 +42,27 @@ export default function MonitoringPage() {
       });
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleExportExcel = async (year: number) => {
+    setIsExporting(true);
+    try {
+      await reportService.exportExcel(year);
+      toast({
+        title: "Export Berhasil",
+        description: `Laporan JPL tahun ${year} berhasil diunduh.`,
+        variant: "success",
+      });
+    } catch (error) {
+      console.error("Failed to export Excel:", error);
+      toast({
+        title: "Export Gagal",
+        description: "Tidak dapat mengunduh laporan Excel. Silakan coba lagi.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsExporting(false);
     }
   };
 
@@ -70,6 +102,33 @@ export default function MonitoringPage() {
           <p className="text-xs text-muted-foreground hidden md:block">
             Data per: {data.report_metadata?.data_as_of ? new Date(data.report_metadata.data_as_of).toLocaleString('id-ID') : '-'}
           </p>
+          
+          {/* Export Excel Dropdown */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" disabled={isExporting} className="gap-2">
+                {isExporting ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <FileSpreadsheet className="w-4 h-4" />
+                )}
+                <span className="hidden sm:inline">Export Excel</span>
+                <ChevronDown className="w-4 h-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              {yearOptions.map((year) => (
+                <DropdownMenuItem
+                  key={year}
+                  onClick={() => handleExportExcel(year)}
+                  disabled={isExporting}
+                >
+                  Tahun {year}
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
+
           <Button variant="outline" size="icon" onClick={loadData} title="Refresh Data">
             <RefreshCw className="w-4 h-4" />
           </Button>
@@ -94,3 +153,4 @@ export default function MonitoringPage() {
     </div>
   );
 }
+

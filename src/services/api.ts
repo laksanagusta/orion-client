@@ -10,6 +10,7 @@ const API_BASE_URL = getApiUrl();
 interface ApiError {
   message: string;
   status: number;
+  errors?: Record<string, string[]>;
 }
 
 export class ApiClient {
@@ -17,6 +18,10 @@ export class ApiClient {
 
   constructor(baseUrl: string) {
     this.baseUrl = baseUrl;
+  }
+
+  getBaseUrl(): string {
+    return this.baseUrl;
   }
 
   private getAuthToken(): string | null {
@@ -49,7 +54,28 @@ export class ApiClient {
       
       try {
         const errorData = await response.json();
-        error.message = errorData.message || errorData.error || error.message;
+        
+        // Handle nested errors format: {"message":"bad_request","errors":{"username":["already exist"]}}
+        if (errorData.errors && typeof errorData.errors === 'object') {
+          // Store the raw errors object
+          error.errors = errorData.errors;
+
+          const errorMessages: string[] = [];
+          for (const [field, messages] of Object.entries(errorData.errors)) {
+            if (Array.isArray(messages)) {
+              errorMessages.push(`${field}: ${messages.join(', ')}`);
+            } else if (typeof messages === 'string') {
+              errorMessages.push(`${field}: ${messages}`);
+            }
+          }
+          if (errorMessages.length > 0) {
+            error.message = errorMessages.join('; ');
+          } else {
+            error.message = errorData.message || errorData.error || error.message;
+          }
+        } else {
+          error.message = errorData.message || errorData.error || error.message;
+        }
       } catch {
         // If response is not JSON, use default message
       }

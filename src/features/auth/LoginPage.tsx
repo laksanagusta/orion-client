@@ -5,10 +5,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { Loader2 } from "lucide-react";
 
 import { Logo } from "@/components/Logo";
+import { cn } from "@/lib/utils";
 
 export default function LoginPage() {
   const login = useAuthStore((state) => state.login);
@@ -17,11 +18,13 @@ export default function LoginPage() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [validationErrors, setValidationErrors] = useState<Record<string, string[]>>({});
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     setError("");
+    setValidationErrors({});
 
     try {
       // 1. Login to get token
@@ -37,10 +40,19 @@ export default function LoginPage() {
       login(response.token, user);
       
       navigate("/dashboard");
-    } catch (err) {
+    } catch (err: any) {
       console.error(err);
       localStorage.removeItem('token'); // Cleanup if failed
-      setError("Invalid username or password");
+      
+      if (err && typeof err === 'object') {
+        if (err.errors) {
+          setValidationErrors(err.errors);
+        }
+        
+        setError(err.message || "Invalid username or password");
+      } else {
+        setError("Invalid username or password");
+      }
     } finally {
       setIsLoading(false);
     }
@@ -62,15 +74,18 @@ export default function LoginPage() {
         <div className="bg-white border border-border rounded-xl p-8 shadow-sm space-y-6">
           <form onSubmit={handleLogin} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="username">Username</Label>
+              <Label htmlFor="username">NIP (Nomor Induk Pegawai)</Label>
               <Input
                 id="username"
-                placeholder="e.g. johndoe"
+                placeholder="e.g. 197606252011012003"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
                 disabled={isLoading}
-                className="h-11"
+                className={cn("h-11", validationErrors.username && "border-destructive focus-visible:ring-destructive")}
               />
+              {validationErrors.username && (
+                <p className="text-sm text-destructive">{validationErrors.username[0]}</p>
+              )}
             </div>
             <div className="space-y-2">
               <div className="flex items-center justify-between">
@@ -88,8 +103,11 @@ export default function LoginPage() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 disabled={isLoading}
-                className="h-11"
+                className={cn("h-11", validationErrors.password && "border-destructive focus-visible:ring-destructive")}
               />
+              {validationErrors.password && (
+                <p className="text-sm text-destructive">{validationErrors.password[0]}</p>
+              )}
             </div>
 
             {error && (
@@ -121,8 +139,17 @@ export default function LoginPage() {
             </Button>
           </form>
         </div>
-        <div className="text-center text-xs text-muted-foreground">
-            <p>Enter your Identity Service credentials</p>
+        <div className="text-center space-y-2">
+          <p className="text-sm text-muted-foreground">
+            Belum punya akun?{" "}
+            <Link
+              to="/register"
+              className="font-medium text-primary hover:text-primary/80 transition-colors"
+            >
+              Daftar di sini
+            </Link>
+          </p>
+          <p className="text-xs text-muted-foreground">Enter your Identity Service credentials</p>
         </div>
       </div>
     </div>

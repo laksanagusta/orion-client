@@ -121,6 +121,82 @@ export const certificateService = {
   delete: async (id: string): Promise<void> => {
     return apiClient.delete<void>(`${ENDPOINT}/${id}`);
   },
+
+  /**
+   * Get preview URL for a certificate document
+   * This returns a URL that can be used directly in an iframe or img tag
+   * GET /api/v1/certificates/:id/preview
+   */
+  getPreviewUrl: (id: string): string => {
+    const token = localStorage.getItem('token');
+    const baseUrl = apiClient.getBaseUrl();
+    // For preview, we need to pass token as query param since browser can't add headers
+    return `${baseUrl}${ENDPOINT}/${id}/preview?token=${token}`;
+  },
+
+  /**
+   * Get preview blob for a certificate document (fetches with auth header)
+   * Returns a blob URL that can be used in img src or iframe
+   * GET /api/v1/certificates/:id/preview
+   */
+  getPreviewBlob: async (id: string): Promise<{ blobUrl: string; contentType: string }> => {
+    const token = localStorage.getItem('token');
+    const baseUrl = apiClient.getBaseUrl();
+    const url = `${baseUrl}${ENDPOINT}/${id}/preview`;
+
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to fetch preview');
+    }
+
+    const contentType = response.headers.get('content-type') || 'application/pdf';
+    const blob = await response.blob();
+    const blobUrl = URL.createObjectURL(blob);
+
+    return { blobUrl, contentType };
+  },
+
+  /**
+   * Download a certificate document
+   * GET /api/v1/certificates/:id/download
+   */
+  download: async (id: string, filename?: string): Promise<void> => {
+    const token = localStorage.getItem('token');
+    const baseUrl = apiClient.getBaseUrl();
+    const url = `${baseUrl}${ENDPOINT}/${id}/download`;
+
+    try {
+      const response = await fetch(url, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to download file');
+      }
+
+      const blob = await response.blob();
+      const downloadUrl = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = downloadUrl;
+      link.download = filename || 'certificate.pdf';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(downloadUrl);
+    } catch (error) {
+      console.error('Download failed:', error);
+      throw error;
+    }
+  },
 };
 
 export type { Certificate };

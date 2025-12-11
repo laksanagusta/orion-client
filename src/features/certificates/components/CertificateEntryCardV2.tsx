@@ -34,6 +34,12 @@ import { cn } from "@/lib/utils";
 import { certificateSchema, defaultFormValues, type CertificateFormValues } from "../schema";
 import type { CertificateTypeItem } from "@/types/certificate";
 
+// Helper function to allow only numeric input
+const handleNumericInput = (e: React.FormEvent<HTMLInputElement>) => {
+  const input = e.currentTarget;
+  input.value = input.value.replace(/[^0-9]/g, '');
+};
+
 export type CertificateEntryV2Status = 
   | 'pending'      // File dropped, waiting for action
   | 'extracting'   // Extracting data via AI
@@ -49,6 +55,7 @@ export interface CertificateEntryV2 {
   status: CertificateEntryV2Status;
   data?: CertificateFormValues;
   error?: string;
+  validationErrors?: Record<string, string[]>; // Field-specific validation errors from API
   isExtracted?: boolean;     // Whether data was extracted via AI
 }
 
@@ -108,6 +115,22 @@ export function CertificateEntryCardV2({
     }
   }, [entryDataJson, entry.data, form]);
 
+  // Handle validation errors from parent
+  useEffect(() => {
+    if (entry.validationErrors) {
+      Object.entries(entry.validationErrors).forEach(([field, messages]) => {
+        if (messages && messages.length > 0) {
+          // Map API fields to form fields if necessary, or assume they match snake_case schema
+          // certificateSchema keys are already snake_case matching API
+          form.setError(field as any, {
+            type: 'server',
+            message: messages[0]
+          });
+        }
+      });
+    }
+  }, [entry.validationErrors, form]);
+
   const onSubmit = (data: CertificateFormValues) => {
     onSave(entry.id, data);
   };
@@ -118,13 +141,26 @@ export function CertificateEntryCardV2({
   const isPending = entry.status === 'pending';
   const isReady = entry.status === 'ready';
 
+  const cardRef = useRef<HTMLDivElement>(null);
+
+  // Auto-scroll when extracting starts
+  useEffect(() => {
+    if (entry.status === 'extracting' && cardRef.current) {
+      cardRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+  }, [entry.status]);
+
+  const isError = entry.status === 'error';
+
   const isImage = entry.file.type.startsWith('image/');
 
   return (
     <Card
+      ref={cardRef}
       className={cn(
         "transition-all duration-200",
-        isSaved && "border-green-500/50 bg-green-50/10"
+        isSaved && "border-green-500/50 bg-green-50/10",
+        isError && "border-destructive/50 bg-destructive/5"
       )}
     >
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
@@ -180,8 +216,8 @@ export function CertificateEntryCardV2({
                   Tersimpan
                 </span>
               )}
-              {entry.status === 'error' && (
-                <span className="text-destructive">{entry.error || "Gagal memproses file"}</span>
+              {isError && (
+                <span className="text-destructive font-medium">{entry.error || "Gagal memproses file"}</span>
               )}
             </div>
           </div>
@@ -191,7 +227,7 @@ export function CertificateEntryCardV2({
           size="icon"
           className="text-muted-foreground hover:text-destructive"
           onClick={() => onRemove(entry.id)}
-          disabled={isSaving}
+          disabled={isSaving || isExtracting}
         >
           <Trash2 className="w-4 h-4" />
         </Button>
@@ -272,14 +308,15 @@ export function CertificateEntryCardV2({
                 <FormField
                   control={form.control}
                   name="training_name"
-                  render={({ field }) => (
+                  render={({ field, fieldState }) => (
                     <FormItem className="col-span-1 md:col-span-2">
                       <FormLabel>Nama Pelatihan</FormLabel>
                       <FormControl>
                         <Input
                           placeholder="cth. Manajemen Proyek Lanjutan"
                           {...field}
-                          disabled={isSaved || isPending}
+                          disabled={isSaved || isSaving}
+                          className={cn(fieldState.error && "border-destructive focus-visible:ring-destructive")}
                         />
                       </FormControl>
                       <FormMessage />
@@ -290,14 +327,15 @@ export function CertificateEntryCardV2({
                 <FormField
                   control={form.control}
                   name="institution"
-                  render={({ field }) => (
+                  render={({ field, fieldState }) => (
                     <FormItem>
                       <FormLabel>Institusi</FormLabel>
                       <FormControl>
                         <Input
                           placeholder="cth. LAN"
                           {...field}
-                          disabled={isSaved || isPending}
+                          disabled={isSaved || isSaving}
+                          className={cn(fieldState.error && "border-destructive focus-visible:ring-destructive")}
                         />
                       </FormControl>
                       <FormMessage />
@@ -308,14 +346,15 @@ export function CertificateEntryCardV2({
                 <FormField
                   control={form.control}
                   name="certificate_number"
-                  render={({ field }) => (
+                  render={({ field, fieldState }) => (
                     <FormItem>
                       <FormLabel>Nomor Sertifikat</FormLabel>
                       <FormControl>
                         <Input
                           placeholder="cth. CERT/2025/001"
                           {...field}
-                          disabled={isSaved || isPending}
+                          disabled={isSaved || isSaving}
+                          className={cn(fieldState.error && "border-destructive focus-visible:ring-destructive")}
                         />
                       </FormControl>
                       <FormMessage />
@@ -326,7 +365,7 @@ export function CertificateEntryCardV2({
                 <Controller
                   control={form.control}
                   name="type"
-                  render={({ field }) => (
+                  render={({ field, fieldState }) => (
                     <FormItem>
                       <FormLabel>Tipe</FormLabel>
                       <Select
@@ -339,10 +378,10 @@ export function CertificateEntryCardV2({
                           previousType.current = value;
                         }}
                         value={field.value || ""}
-                        disabled={isSaved || isPending}
+                        disabled={isSaved || isSaving}
                       >
                         <FormControl>
-                          <SelectTrigger>
+                          <SelectTrigger className={cn(fieldState.error && "border-destructive focus-visible:ring-destructive")}>
                             <SelectValue placeholder="Pilih tipe" />
                           </SelectTrigger>
                         </FormControl>
@@ -362,17 +401,17 @@ export function CertificateEntryCardV2({
                 <Controller
                   control={form.control}
                   name="sub_type"
-                  render={({ field }) => (
+                  render={({ field, fieldState }) => (
                     <FormItem>
                       <FormLabel>Subtipe</FormLabel>
                       <Select
                         key={`subtype-${formKey}-${selectedType}`}
                         onValueChange={field.onChange}
                         value={field.value || ""}
-                        disabled={!selectedType || isSaved || isPending}
+                        disabled={!selectedType || isSaved || isSaving}
                       >
                         <FormControl>
-                          <SelectTrigger>
+                          <SelectTrigger className={cn(fieldState.error && "border-destructive focus-visible:ring-destructive")}>
                             <SelectValue placeholder="Pilih subtipe" />
                           </SelectTrigger>
                         </FormControl>
@@ -392,14 +431,15 @@ export function CertificateEntryCardV2({
                 <FormField
                   control={form.control}
                   name="start_date"
-                  render={({ field }) => (
+                  render={({ field, fieldState }) => (
                     <FormItem>
                       <FormLabel>Tanggal Mulai</FormLabel>
                       <FormControl>
                         <Input
                           type="date"
                           {...field}
-                          disabled={isSaved || isPending}
+                          disabled={isSaved || isSaving}
+                          className={cn(fieldState.error && "border-destructive focus-visible:ring-destructive")}
                         />
                       </FormControl>
                       <FormMessage />
@@ -410,14 +450,15 @@ export function CertificateEntryCardV2({
                 <FormField
                   control={form.control}
                   name="end_date"
-                  render={({ field }) => (
+                  render={({ field, fieldState }) => (
                     <FormItem>
                       <FormLabel>Tanggal Selesai</FormLabel>
                       <FormControl>
                         <Input
                           type="date"
                           {...field}
-                          disabled={isSaved || isPending}
+                          disabled={isSaved || isSaving}
+                          className={cn(fieldState.error && "border-destructive focus-visible:ring-destructive")}
                         />
                       </FormControl>
                       <FormMessage />
@@ -428,7 +469,7 @@ export function CertificateEntryCardV2({
                 <FormField
                   control={form.control}
                   name="year"
-                  render={({ field }) => (
+                  render={({ field, fieldState }) => (
                     <FormItem>
                       <FormLabel>Tahun</FormLabel>
                       <FormControl>
@@ -436,7 +477,12 @@ export function CertificateEntryCardV2({
                           type="number"
                           placeholder="2025"
                           {...field}
-                          disabled={isSaved || isPending}
+                          disabled={isSaved || isSaving}
+                          inputMode="numeric"
+                          min={2000}
+                          max={2100}
+                          onInput={handleNumericInput}
+                          className={cn(fieldState.error && "border-destructive focus-visible:ring-destructive")}
                         />
                       </FormControl>
                       <FormMessage />
@@ -447,7 +493,7 @@ export function CertificateEntryCardV2({
                 <FormField
                   control={form.control}
                   name="jpl_hours"
-                  render={({ field }) => (
+                  render={({ field, fieldState }) => (
                     <FormItem>
                       <FormLabel>Jam JPL</FormLabel>
                       <FormControl>
@@ -455,7 +501,11 @@ export function CertificateEntryCardV2({
                           type="number"
                           placeholder="40"
                           {...field}
-                          disabled={isSaved || isPending}
+                          disabled={isSaved || isSaving}
+                          inputMode="numeric"
+                          min={1}
+                          onInput={handleNumericInput}
+                          className={cn(fieldState.error && "border-destructive focus-visible:ring-destructive")}
                         />
                       </FormControl>
                       <FormMessage />
@@ -466,25 +516,9 @@ export function CertificateEntryCardV2({
 
               {/* Actions */}
               <div className="flex justify-between pt-2">
-                {/* Skip extraction and enable form */}
-                {isPending && (
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => {
-                      // Trigger parent to set status to 'ready' without extraction
-                      onSave(entry.id, form.getValues());
-                    }}
-                    className="gap-2"
-                  >
-                    Isi Manual
-                  </Button>
-                )}
-
-                {(isReady || isPending) && (
                   <Button
                     type="submit"
-                    disabled={isSaved || isSaving || isPending}
+                    disabled={isSaved || isSaving}
                     className="gap-2 ml-auto"
                   >
                     {isSaving && <Loader2 className="w-4 h-4 animate-spin" />}
@@ -497,7 +531,6 @@ export function CertificateEntryCardV2({
                       </>
                     )}
                   </Button>
-                )}
               </div>
             </form>
           </Form>

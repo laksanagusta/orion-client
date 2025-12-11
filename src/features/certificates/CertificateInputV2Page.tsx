@@ -182,6 +182,7 @@ export default function CertificateInputV2Page() {
           toast({
             title: "Ekstraksi Berhasil",
             description: `Data berhasil diekstrak dari ${result.file_name}`,
+            variant: "success",
           });
         } else {
           setEntries((prev) =>
@@ -267,15 +268,7 @@ export default function CertificateInputV2Page() {
     const entry = entries.find((e) => e.id === id);
     if (!entry) return;
 
-    // If entry is pending, just set it to ready with the form data
-    if (entry.status === "pending") {
-      setEntries((prev) =>
-        prev.map((e) =>
-          e.id === id ? { ...e, status: "ready" as const, data } : e
-        )
-      );
-      return;
-    }
+
 
     // Mark as saving
     setEntries((prev) =>
@@ -306,18 +299,35 @@ export default function CertificateInputV2Page() {
       toast({
         title: "Tersimpan",
         description: `Sertifikat "${data.training_name}" berhasil disimpan.`,
+        variant: "success",
       });
-    } catch (error) {
+    } catch (error: any) {
       console.error("Save failed:", error);
+      
+      let validationErrors: Record<string, string[]> | undefined;
+      let errorMessage = error instanceof Error ? error.message : "Gagal menyimpan sertifikat.";
+
+      if (error && typeof error === 'object') {
+        if ('errors' in error) {
+          validationErrors = error.errors;
+        }
+        if ('message' in error) {
+            errorMessage = error.message;
+        }
+      }
+
       setEntries((prev) =>
-        prev.map((e) => (e.id === id ? { ...e, status: "ready" as const } : e))
+        prev.map((e) => (e.id === id ? { 
+            ...e, 
+            status: "error" as const,
+            error: errorMessage,
+            validationErrors
+        } : e))
       );
+      
       toast({
         title: "Gagal Menyimpan",
-        description:
-          error instanceof Error
-            ? error.message
-            : "Gagal menyimpan sertifikat. Silakan coba lagi.",
+        description: errorMessage,
         variant: "destructive",
       });
     }
@@ -354,6 +364,7 @@ export default function CertificateInputV2Page() {
       toast({
         title: "Semua Entri Disimpan",
         description: `Berhasil menyimpan ${readyEntries.length} sertifikat.`,
+        variant: "success",
       });
     } catch (error) {
       console.error("Save all failed:", error);
@@ -370,24 +381,28 @@ export default function CertificateInputV2Page() {
   const pendingCount = entries.filter((e) => e.status === "pending").length;
   const readyCount = entries.filter((e) => e.status === "ready").length;
 
+  const isAnyExtracting = entries.some(e => e.status === 'extracting');
+  const isAnySaving = entries.some(e => e.status === 'saving');
+  const isProcessRunning = isAnyExtracting || isAnySaving || isSavingAll;
+
   return (
     <div className="container mx-auto p-6 max-w-5xl space-y-8">
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-2xl font-bold tracking-tight">
-            Input Sertifikat (Flow Baru)
+            Input Pelatihan
           </h2>
           <p className="text-muted-foreground">
-            Unggah file sertifikat, lalu ekstrak data atau isi manual.
+            Unggah dokumen pelatihan, lalu ekstrak data atau isi manual.
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <Button variant="outline" onClick={handleAddManual}>
+          <Button variant="outline" onClick={handleAddManual} disabled={isProcessRunning}>
             <Plus className="mr-2 h-4 w-4" />
             Tambah File
           </Button>
           {readyCount > 0 && (
-            <Button onClick={handleSaveAll} disabled={isSavingAll}>
+            <Button onClick={handleSaveAll} disabled={isSavingAll || isProcessRunning}>
               {isSavingAll ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -404,8 +419,7 @@ export default function CertificateInputV2Page() {
       <div className="bg-amber-50 border border-amber-200 rounded-md p-3 flex items-center gap-2 text-amber-800 text-sm">
         <AlertTriangle className="w-4 h-4 shrink-0" />
         <p>
-          File disimpan sementara di browser. Klik "Ekstrak Data" untuk
-          ekstraksi otomatis atau isi form secara manual.
+          <strong>Disclaimer:</strong> Ekstraksi data dilakukan menggunakan AI. Mohon periksa kembali kelengkapan dan kebenaran data sebelum menyimpan.
         </p>
       </div>
 
@@ -413,9 +427,18 @@ export default function CertificateInputV2Page() {
 
       {pendingCount > 0 && (
         <div className="flex justify-center">
-          <Button onClick={handleExtractAll} className="gap-2">
-            <Sparkles className="w-4 h-4" />
-            Ekstrak Semua ({pendingCount} File)
+          <Button onClick={handleExtractAll} className="gap-2" disabled={isProcessRunning}>
+            {isAnyExtracting ? (
+              <>
+                <Loader2 className="w-4 h-4 animate-spin" />
+                Mengekstrak...
+              </>
+            ) : (
+              <>
+                <Sparkles className="w-4 h-4" />
+                Ekstrak Semua ({pendingCount} File)
+              </>
+            )}
           </Button>
         </div>
       )}
