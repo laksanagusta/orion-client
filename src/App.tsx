@@ -3,8 +3,9 @@ import { ProtectedRoute } from "@/components/layout/ProtectedRoute";
 import { MainLayout } from "@/components/layout/MainLayout";
 import LoginPage from "@/features/auth/LoginPage";
 import DashboardPage from "@/features/dashboard/DashboardPage";
-import CertificateInputPage from "@/features/certificates/CertificateInputPage";
+import CertificateInputV2Page from "@/features/certificates/CertificateInputV2Page";
 import CertificateListPage from "@/features/certificates/CertificateListPage";
+import CertificateDetailPage from "@/features/certificates/CertificateDetailPage";
 import ProfilePage from "@/features/profile/ProfilePage";
 import MonitoringPage from "@/features/monitoring/MonitoringPage";
 
@@ -21,8 +22,9 @@ function App() {
         }>
           <Route path="/" element={<Navigate to="/dashboard" replace />} />
           <Route path="/dashboard" element={<DashboardPage />} />
-          <Route path="/certificates/input" element={<CertificateInputPage />} />
+          <Route path="/certificates/input" element={<CertificateInputV2Page />} />
           <Route path="/certificates/list" element={<CertificateListPage />} />
+          <Route path="/certificates/:id" element={<CertificateDetailPage />} />
           <Route path="/monitoring" element={<MonitoringPage />} />
           <Route path="/notifications" element={<div>Notifications Page</div>} />
           <Route path="/profile" element={<ProfilePage />} />
@@ -33,3 +35,4 @@ function App() {
 }
 
 export default App;
+

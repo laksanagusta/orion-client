@@ -36,7 +36,7 @@ export function OrionCharts() {
   }, []);
 
   // Default data for loading/error state
-  const monthlyData = stats?.monthly_progress.map(item => ({
+  const monthlyData = stats?.monthly_progress?.map(item => ({
     month: item.month,
     jpl: item.total_jpl
   })) || [
@@ -54,7 +54,7 @@ export function OrionCharts() {
     { month: "Dec", jpl: 0 },
   ];
 
-  const typeData = stats?.by_type.map(item => ({
+  const typeData = stats?.by_type?.map(item => ({
     type: item.type,
     jpl: item.total_jpl
   })) || [

@@ -12,6 +12,8 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { useAuthStore } from "@/store/useAuthStore";
 
+import { Logo } from "@/components/Logo";
+
 const sidebarItems = [
   { icon: LayoutDashboard, label: "Dashboard", href: "/dashboard" },
   { icon: FileText, label: "Input Sertifikat", href: "/certificates/input" },
@@ -23,17 +25,12 @@ export function Sidebar() {
   const logout = useAuthStore((state) => state.logout);
 
   return (
-    <div className="fixed inset-y-0 left-0 z-30 w-64 bg-card border-r border-border flex-col hidden md:flex">
-      <div className="h-12 px-4 flex items-center gap-2 border-b border-border">
-        <div className="w-7 h-7 bg-primary rounded-lg flex items-center justify-center">
-          <svg className="w-4 h-4 text-primary-foreground" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" />
-          </svg>
-        </div>
-        <span className="font-bold text-sm text-foreground tracking-tight">Orion</span>
+    <div className="fixed inset-y-0 left-0 z-30 w-64 bg-card flex-col hidden md:flex">
+      <div className="h-14 px-5 flex items-center border-b border-primary/20 bg-primary">
+        <Logo size="md" textClassName="text-primary-foreground" />
       </div>
 
-      <nav className="flex-1 px-3 py-2 space-y-0.5 overflow-y-auto">
+      <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto border-r border-border">
         {sidebarItems.map((item) => (
           <NavLink
             key={item.href}
@@ -53,7 +50,7 @@ export function Sidebar() {
         ))}
       </nav>
 
-      <div className="p-3 border-t border-border space-y-0.5">
+      <div className="p-3 border-t border-border border-r space-y-0.5">
         <NavLink
             to="/notifications"
             className={({ isActive }) =>

@@ -3,7 +3,9 @@
  * Handles authentication, request/response, and error handling
  */
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5003';
+import { getApiUrl } from '../lib/config';
+
+const API_BASE_URL = getApiUrl();
 
 interface ApiError {
   message: string;

@@ -7,6 +7,7 @@ export interface Certificate {
   id: string;
   user_id: string;
   file_name: string;
+  file_path: string;
   file_url: string;
   training_name: string;
   institution: string;
@@ -93,6 +94,26 @@ export interface ExtractCertificatesResponse {
     total: number;
   };
 }
+
+// Extract-only response (no file storage, just extraction)
+export interface ExtractOnlyResult {
+  file_name: string;
+  success: boolean;
+  extracted: ExtractedData;
+  error?: string;
+}
+
+export interface ExtractOnlyResponse {
+  success: boolean;
+  message: string;
+  data: {
+    total: number;
+    successful: number;
+    failed: number;
+    results: ExtractOnlyResult[];
+  };
+}
+
 
 // Batch save request body
 export interface BatchSaveCertificateItem {

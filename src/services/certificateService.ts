@@ -9,6 +9,7 @@ import type {
   CertificateResponse,
   CreateCertificateData,
   ExtractCertificatesResponse,
+  ExtractOnlyResponse,
   BatchSaveRequest,
   BatchSaveResponse,
   UpdateCertificateData,
@@ -74,6 +75,19 @@ export const certificateService = {
     });
 
     return apiClient.postFormData<ExtractCertificatesResponse>(`${ENDPOINT}/extract`, formData);
+  },
+
+  /**
+   * Extract certificate data without storing files (extract-only mode)
+   * POST /api/v1/certificates/extract-only (formdata with multiple files)
+   */
+  extractOnly: async (files: File[]): Promise<ExtractOnlyResponse> => {
+    const formData = new FormData();
+    files.forEach((file) => {
+      formData.append('files', file);
+    });
+
+    return apiClient.postFormData<ExtractOnlyResponse>(`${ENDPOINT}/extract-only`, formData);
   },
 
   /**

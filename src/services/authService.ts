@@ -1,8 +1,9 @@
 import { ApiClient } from "./api";
 import type { LoginResponse, User, LoginRequest, RegisterRequest } from "../types/auth";
+import { getIdentityUrl } from "../lib/config";
 
 // Identity Service URL
-const IDENTITY_API_URL = import.meta.env.VITE_IDENTITY_URL || 'http://localhost:5001';
+const IDENTITY_API_URL = getIdentityUrl();
 
 // Create a specific client for Identity Service
 const identityClient = new ApiClient(IDENTITY_API_URL);

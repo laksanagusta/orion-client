@@ -70,7 +70,7 @@ export function MetricsCards() {
 
   // Calculate derived metrics
   const currentQuarter = Math.ceil((new Date().getMonth() + 1) / 3);
-  const currentQuarterData = stats.by_quarter.find(q => q.quarter === currentQuarter);
+  const currentQuarterData = stats.by_quarter?.find(q => q.quarter === currentQuarter);
   const currentQuarterJpl = currentQuarterData?.total_jpl || 0;
   const quarterTarget = TARGET_JPL / 4;
   

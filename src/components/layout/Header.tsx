@@ -13,11 +13,13 @@ import {
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { useAuthStore } from "@/store/useAuthStore";
 
+import { Logo } from "@/components/Logo";
+
 export function Header() {
   const { user, logout } = useAuthStore();
 
   return (
-    <header className="h-12 border-b border-primary/20 bg-primary px-4 flex items-center justify-between flex-shrink-0">
+    <header className="sticky top-0 z-40 h-14 border-b border-primary/20 bg-primary px-4 flex items-center justify-between flex-shrink-0">
       <div className="flex items-center gap-4">
         <Sheet>
           <SheetTrigger asChild>
@@ -28,13 +30,8 @@ export function Header() {
           <SheetContent side="left" className="p-0 w-64">
              {/* Mobile Sidebar Content - slightly modified version of Sidebar */}
              <div className="h-full flex flex-col">
-                <div className="p-6 flex items-center gap-2 border-b border-border">
-                    <div className="w-9 h-9 bg-primary rounded-lg flex items-center justify-center shadow-sm">
-                      <svg className="w-5 h-5 text-primary-foreground" viewBox="0 0 24 24" fill="currentColor">
-                        <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" />
-                      </svg>
-                    </div>
-                    <span className="font-bold text-xl text-foreground tracking-tight">Orion</span>
+                <div className="p-6 flex items-center border-b border-border">
+                  <Logo size="lg" />
                 </div>
                 {/* Navigation links would go here, duplicating logic for now or refactoring Sidebar to be reusable */}
                 {/* For simplicity in this step, I'll just render a placeholder or import the nav items if I exported them */}

@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect } from "react";
-import { Plus, Loader2, AlertTriangle, Info } from "lucide-react";
+import { Plus, Loader2, AlertTriangle } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
@@ -393,7 +393,7 @@ export default function CertificateInputPage() {
     }
   };
 
-  const readyCount = entries.filter((e) => e.status === 'ready').length;
+
 
   return (
     <div className="container mx-auto p-6 max-w-5xl space-y-8">

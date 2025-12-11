@@ -12,7 +12,8 @@ import {
   Loader2,
   ChevronLeft,
   ChevronRight,
-  Filter
+  Filter,
+  Eye
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -307,7 +308,12 @@ export default function CertificateListPage() {
                               <FileText className="w-4 h-4 text-primary" />
                             </div>
                             <div className="min-w-0">
-                              <p className="font-medium truncate max-w-[200px]">{cert.training_name}</p>
+                              <Link 
+                                to={`/certificates/${cert.id}`} 
+                                className="font-medium truncate max-w-[200px] block hover:text-primary hover:underline transition-colors"
+                              >
+                                {cert.training_name}
+                              </Link>
                               <p className="text-xs text-muted-foreground">{cert.certificate_number}</p>
                             </div>
                           </div>
@@ -340,6 +346,11 @@ export default function CertificateListPage() {
                               </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end">
+                              <DropdownMenuItem asChild>
+                                <Link to={`/certificates/${cert.id}`}>
+                                  <Eye className="mr-2 h-4 w-4" /> Lihat Detail
+                                </Link>
+                              </DropdownMenuItem>
                               {cert.file_url && (
                                 <DropdownMenuItem onClick={() => window.open(cert.file_url, '_blank')}>
                                   <FileText className="mr-2 h-4 w-4" /> View Document
